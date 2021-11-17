@@ -36,7 +36,10 @@ const renderMenu = (screenId, {getScreen}, state) => {
 		}
 
 		if(key.return) {
-			screen.questions[currentQuestionIdx]?.cb(inputValue);
+			const callback = screen.questions[currentQuestionIdx].cb;
+			if(callback) {
+				callback(inputValue);
+			}
 			setInput('')
 			if(currentQuestionIdx < screen.questions.length - 1) {
 				selectQuestion(currentQuestionIdx + 1)
@@ -105,13 +108,13 @@ export const CLI = (menu, currentScreen, defaultScreen) => {
 	const selectNextItem = () => {
 		const screenItems = getScreen(screen).items;
 		const selectedItemIdx = screenItems.findIndex(it => it.id === menuItem);
-		setMenuItem(screenItems[selectedItemIdx + 1]?.id || screenItems[0].id)
+		setMenuItem((screenItems[selectedItemIdx + 1] || screenItems[0]).id)
 	}
 
 	const selectPrevItem = () => {
 		const screenItems = getScreen(screen).items;
 		const selectedItemIdx = screenItems.findIndex(it => it.id === menuItem);
-		setMenuItem(screenItems[selectedItemIdx - 1]?.id || screenItems[screenItems.length - 1].id)
+		setMenuItem((screenItems[selectedItemIdx - 1] || screenItems[screenItems.length - 1]).id)
 	}
 
 	useInput((input, key) => {
