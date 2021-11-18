@@ -2,8 +2,9 @@ import React, { useEffect } from 'react';
 import { Text, useInput, Box } from 'ink';
 import { Header } from './components/header.js';
 import { Menu } from './components/menu.js';
+import { buildMenu } from './menu.js';
 
-const renderMenu = (screenId, {getScreen}, state) => {
+const renderMenu = ({screenId, actions: {getScreen}, state}) => {
 	const screen = getScreen(screenId);
 	const [inputValue, setInput] = React.useState('');
 	const [output, setOutput] = React.useState('');
@@ -23,7 +24,7 @@ const renderMenu = (screenId, {getScreen}, state) => {
 		}
 
 		screen.onInit && screen.onInit()
-	}, [screenId]);
+	}, [screenId, state]);
 
 	useInput((input, key) => {
 		if(screen.type !== 'dialog') {
@@ -57,7 +58,7 @@ const renderMenu = (screenId, {getScreen}, state) => {
 				{},
 				React.createElement(
 					Box,
-					{height: 8},
+					{height: 16},
 					React.createElement(Text, {}, `${output}: `)
 				),
 				React.createElement(
@@ -76,7 +77,7 @@ const renderMenu = (screenId, {getScreen}, state) => {
 				{},
 				React.createElement(
 					Box,
-					{height: 8},
+					{height: 16},
 					typeof output === 'string' ? React.createElement(Text, {}, output) : output,
 				),
 			)
@@ -95,7 +96,8 @@ const renderMenu = (screenId, {getScreen}, state) => {
 
 
 
-export const CLI = (menu, currentScreen, defaultScreen) => {
+export const CLI = ({actions, state, currentScreen, defaultScreen}) => {
+	const menu = buildMenu(actions, state)
 	const getScreen = (id) => menu.find(it => it.id === id);
 	const [menuItem, setMenuItem] = React.useState(getScreen(defaultScreen).items[0].id);
 	const [screen, setScreen] = React.useState(defaultScreen);
@@ -156,6 +158,6 @@ export const CLI = (menu, currentScreen, defaultScreen) => {
 		}
 	});
 
-	return renderMenu(screen, {getScreen}, {focusedItem: menuItem, menu})
+	return React.createElement(renderMenu, {screenId: screen, actions: {getScreen}, state: {focusedItem: menuItem, menu}})
 };
 

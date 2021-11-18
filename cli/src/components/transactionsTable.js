@@ -1,13 +1,13 @@
 import {Text, Box } from 'ink';
 import React from 'react';
 
-export const TransactionsTable = (transactions) =>
+export const TransactionsTable = ({transactions}) =>
 	React.createElement(
     Box,
     {
       flexDirection: "column",
       width: 80,
-	  borderStyle: "single",
+	    borderStyle: "single",
     },
     React.createElement(
       Box,

@@ -1,16 +1,21 @@
+import React from "react";
+import { MiningData } from "./components/miningData.js";
 import {TransactionsTable} from "./components/transactionsTable.js";
 
-export const buildMenu = ({confirmTransaction, setAmount, setAddress, quit}, {transactions}) => [
+export const buildMenu = ({confirmTransaction, setAmount, setAddress, quit, stopMining, startMining}, {transactions, miningData}) => [
     {
         id: 'main',
         title: 'Main menu',
+        onInit: () => {
+            stopMining()
+        },
         items: [
             {
                 id: 'wallet',
                 title: 'Wallet',
             },
             {
-                id: 'mining',
+                id: 'miningMenu',
                 title: 'Mining',
             },
             {
@@ -71,8 +76,25 @@ export const buildMenu = ({confirmTransaction, setAmount, setAddress, quit}, {tr
         id: 'transactionsHistory',
         title: 'Transactions History',
         output: () => {
-            return TransactionsTable(transactions);
+            return React.createElement(TransactionsTable, {transactions});
         }
+    },
+    {
+        id: 'miningMenu',
+        title: 'Mining',
+        items: [
+            {
+                id: 'startMining',
+                title: 'Start Mining'
+            }
+        ]
+    },
+    {
+        id: 'startMining',
+        output: React.createElement(MiningData, {data: miningData}),
+        onInit: () => {
+            startMining()
+        },
     },
     {
         id: 'quit',

@@ -1,6 +1,5 @@
 import { createHash } from "crypto";
-import {IBlock} from "../interfaces/block.interface";
-import {getLastItem, hexToBinary, isEq} from "../utils";
+import {getLastItem, hexToBinary, isEq} from "./utils";
 
 
 enum ErrorCode {
@@ -14,6 +13,15 @@ enum ErrorCode {
 type ValidationError = {
     message?: string,
     code: ErrorCode,
+}
+
+export type IBlock = {
+    index: number,
+    timestamp: number,
+    data: string,
+    hash: string,
+    prevHash: string,
+    nonce: number,
 }
 
 export class Block implements IBlock {
@@ -53,12 +61,12 @@ export class Blockchain {
         });
     }
 
-    generateNextBlock(blockData: IBlock['data']) {
+    async generateNextBlock(blockData: IBlock['data']) {
         const previousBlock: Block = this.getLatestBlock();
         const nextIndex: number = previousBlock.index + 1;
         const nextTimestamp: number = new Date().getTime();
 
-        const nextBlock = this.findBlock({
+        const nextBlock = await this.findBlock({
             index: nextIndex,
             prevHash: previousBlock.hash,
             timestamp: nextTimestamp,
@@ -77,9 +85,9 @@ export class Blockchain {
     }
 
     broadcastLatest() {
-        console.log('NEW BLOCK');
-        console.log(getLastItem(this.chain));
-        console.log('');
+        // console.log('NEW BLOCK');
+        // console.log(getLastItem(this.chain));
+        // console.log('');
     }
 
     private getLatestBlock() {
@@ -120,31 +128,38 @@ export class Blockchain {
     }
 
 
-    private findBlock(block: Omit<IBlock, 'nonce' | 'hash'>): Block {
-        let nonce = 0;
+    private findBlock(block: Omit<IBlock, 'nonce' | 'hash'>): Promise<Block> {
         const { index, prevHash, data, timestamp } = block;
 
-        while (true) {
-            const hash: string = this.calculateHash({
-                index,
-                prevHash,
-                data,
-                nonce,
-                timestamp
-            });
-
-            if (hash.startsWith(this.requiredPrefix)) {
-                return new Block({
-                    index,
-                    prevHash,
-                    data,
-                    nonce,
-                    timestamp,
-                    hash,
-                });
+        return new Promise(resolve => {
+            const iter = (initNonce: number) => {
+                for (let nonce = initNonce; nonce < initNonce + 10000; nonce++) {
+                    const hash: string = this.calculateHash({
+                        index,
+                        prevHash,
+                        data,
+                        nonce,
+                        timestamp
+                    });
+        
+                    if (hash.startsWith(this.requiredPrefix)) {
+                        resolve(new Block({
+                            index,
+                            prevHash,
+                            data,
+                            nonce,
+                            timestamp,
+                            hash,
+                        }));
+                        return;
+                    }
+                }
+                
+                setImmediate(() => iter(initNonce + 10000))
             }
-            nonce++;
-        }
+
+            iter(0);
+        });
     };
 
     private hashMatchesDifficulty(hash: string): boolean {
